@@ -7,7 +7,7 @@
   const state = {
     image: null,            // HTMLImageElement
     imageData: null,        // ImageData of the original
-    layoutName: "landscape",
+    layoutName: "color",
     layout: null,           // { cols, rows, patches }
     corners: null,          // [TL, TR, BR, BL] in image pixel space
     refs: null,             // editable copies of layout.patches
@@ -104,9 +104,9 @@
       state.layoutName = layoutSelect.value;
       state.layout = SpyderRefs.getLayout(state.layoutName);
       state.refs = state.layout.patches.map(p => p.slice());
-      state.corners = defaultCorners(img.width, img.height);
+      state.corners = defaultCorners(img.width, img.height, state.layout.defaultRegion);
       uploadHint.textContent =
-        `${img.width} × ${img.height} px — drag the four markers onto the corner patches.`;
+        `${img.width} × ${img.height} px — pick a panel and drag the markers onto its corner patches.`;
       stepAlign.hidden = false;
       stepSample.hidden = false;
       stepFit.hidden = false;
@@ -159,13 +159,17 @@
     });
   }
 
-  function defaultCorners(w, h) {
-    const mx = w * 0.2, my = h * 0.2;
+  function defaultCorners(w, h, region) {
+    // region is [x0, y0, x1, y1] in image-relative coordinates (0..1).
+    // Falls back to a centred 20%-inset box.
+    const r = region || [0.20, 0.20, 0.80, 0.80];
+    const x0 = w * r[0], y0 = h * r[1];
+    const x1 = w * r[2], y1 = h * r[3];
     return [
-      [mx,     my    ], // TL
-      [w - mx, my    ], // TR
-      [w - mx, h - my], // BR
-      [mx,     h - my], // BL
+      [x0, y0], // TL
+      [x1, y0], // TR
+      [x1, y1], // BR
+      [x0, y1], // BL
     ];
   }
 
@@ -219,6 +223,10 @@
     state.layoutName = layoutSelect.value;
     state.layout = SpyderRefs.getLayout(state.layoutName);
     state.refs = state.layout.patches.map(p => p.slice());
+    // Re-bias default corners to the panel side we just switched to.
+    if (state.image) {
+      state.corners = defaultCorners(state.image.width, state.image.height, state.layout.defaultRegion);
+    }
     draw();
     sampleAndRender();
   });
@@ -231,7 +239,9 @@
   insetSlider.addEventListener("change", () => sampleAndRender());
   resetCornersBtn.addEventListener("click", () => {
     if (!state.image) return;
-    state.corners = defaultCorners(state.image.width, state.image.height);
+    state.corners = defaultCorners(
+      state.image.width, state.image.height, state.layout && state.layout.defaultRegion
+    );
     draw();
     sampleAndRender();
   });
