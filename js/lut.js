@@ -24,9 +24,10 @@
   // transform: object with .evaluate(r, g, b) -> [R, G, B] in [0, 1]³
   // size:      LUT cube side length (17, 33, 65, …)
   // title:     LUT title
-  // opts:      { clamp: true }
+  // opts:      { clamp: true, post: rgb => rgb }
   function generateCube(transform, size, title, opts) {
     const clamp = !opts || opts.clamp !== false;
+    const post  = (opts && opts.post) || null;
     const lines = [];
     lines.push(`TITLE "${(title || "Untitled").replace(/"/g, "'")}"`);
     lines.push(`LUT_3D_SIZE ${size}`);
@@ -41,6 +42,7 @@
         for (let ri = 0; ri < size; ri++) {
           const r = ri * step;
           let out = transform.evaluate(r, g, b);
+          if (post) out = post(out);
           let R = out[0], G = out[1], B = out[2];
           if (clamp) { R = clamp01(R); G = clamp01(G); B = clamp01(B); }
           lines.push(`${f(R)} ${f(G)} ${f(B)}`);

@@ -3,68 +3,142 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SpyderCheckr → Rec.709 LUT Maker</title>
+<title>Spyder Bro · log → Rec.709 LUT maker</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='34' r='14' fill='%2300d4ff'/></svg>">
 </head>
 <body>
-<header>
-  <h1>SpyderCheckr → Rec.709 LUT Maker</h1>
-  <p class="lede">
-    Drop in a screenshot of a Datacolor SpyderCheckr photographed in your
-    camera's log format, line up the chart, and generate a <code>.cube</code> LUT
-    that converts that log signal to Rec.709.
-  </p>
+
+<header class="brand">
+  <div class="brand-mark" aria-hidden="true">
+    <svg viewBox="0 0 64 64" width="44" height="44">
+      <defs>
+        <linearGradient id="sb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stop-color="#00d4ff"/>
+          <stop offset="50%"  stop-color="#b388ff"/>
+          <stop offset="100%" stop-color="#ff5b85"/>
+        </linearGradient>
+      </defs>
+      <g fill="none" stroke="url(#sb-grad)" stroke-width="2.6" stroke-linecap="round">
+        <path d="M22 26 L8 18"/>  <path d="M8 18 L4 28"/>
+        <path d="M21 34 L4 34"/>  <path d="M4 34 L2 44"/>
+        <path d="M22 42 L6 50"/>  <path d="M6 50 L8 60"/>
+        <path d="M25 50 L18 60"/>
+        <path d="M42 26 L56 18"/> <path d="M56 18 L60 28"/>
+        <path d="M43 34 L60 34"/> <path d="M60 34 L62 44"/>
+        <path d="M42 42 L58 50"/> <path d="M58 50 L56 60"/>
+        <path d="M39 50 L46 60"/>
+      </g>
+      <ellipse cx="32" cy="38" rx="11" ry="14" fill="url(#sb-grad)"/>
+      <circle cx="32" cy="22" r="7" fill="url(#sb-grad)"/>
+      <circle cx="29.5" cy="21" r="1.4" fill="#0d1117"/>
+      <circle cx="34.5" cy="21" r="1.4" fill="#0d1117"/>
+    </svg>
+  </div>
+  <div class="brand-text">
+    <h1>Spyder<span class="brand-bro">Bro</span></h1>
+    <p>Log screenshot → Rec.709 <code>.cube</code> LUT, in your browser. Bring your own chart.</p>
+  </div>
 </header>
 
 <main>
-  <section class="step" id="step-upload">
-    <h2><span class="num">1</span> Load screenshot</h2>
-    <p>Use a still from a clip in the camera's native log gamma. PNG keeps the values intact;
-       JPEG is fine for most workflows.</p>
-    <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff">
+
+  <section class="card" id="step-upload">
+    <header class="card-head">
+      <span class="num">1</span>
+      <h2>Load a screenshot</h2>
+    </header>
+    <p class="muted">A still pulled from a clip in the camera's native log gamma. PNG keeps the values intact; JPEG is fine for most workflows.</p>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff" hidden>
+      <div class="dz-inner">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <strong>Drop a screenshot</strong>
+        <span>or click to choose · PNG / JPEG / WebP / TIFF</span>
+      </div>
+    </label>
     <p class="hint" id="upload-hint"></p>
   </section>
 
-  <section class="step" id="step-align" hidden>
-    <h2><span class="num">2</span> Align the chart</h2>
-    <p>Drag the four markers to the <strong>centers of the four corner patches</strong> of the
-       chart (in this order: top-left, top-right, bottom-right, bottom-left).
-       Inner patches are placed by bilinear interpolation, so the chart can be at any
-       angle or perspective.</p>
+  <section class="card" id="step-align" hidden>
+    <header class="card-head">
+      <span class="num">2</span>
+      <h2>Align the chart</h2>
+    </header>
+    <p class="muted">Drag the four markers onto the <strong>centres of the four corner patches</strong>: TL → TR → BR → BL. Inner patches are bilinearly interpolated, so the chart can sit at any angle or perspective.</p>
 
     <div class="row">
       <label>Chart layout
         <select id="chart-layout">
-          <option value="landscape">SpyderCheckr 24 — landscape (6 cols × 4 rows)</option>
-          <option value="portrait">SpyderCheckr 24 — portrait (4 cols × 6 rows)</option>
+          <option value="landscape">SpyderCheckr 24 — landscape (6×4)</option>
+          <option value="portrait">SpyderCheckr 24 — portrait (4×6)</option>
         </select>
       </label>
       <label>Sample inset
-        <input type="range" id="sample-inset" min="20" max="55" step="5" value="40">
-        <span id="sample-inset-value">40%</span>
+        <span class="inline-range">
+          <input type="range" id="sample-inset" min="20" max="55" step="5" value="40">
+          <span id="sample-inset-value">40%</span>
+        </span>
       </label>
-      <button id="reset-corners" type="button">Reset corners</button>
+      <button class="ghost" id="reset-corners" type="button">Reset corners</button>
     </div>
 
-    <div id="canvas-wrap">
+    <div id="canvas-wrap" class="frame">
       <canvas id="image-canvas"></canvas>
       <canvas id="overlay-canvas"></canvas>
     </div>
   </section>
 
-  <section class="step" id="step-sample" hidden>
-    <h2><span class="num">3</span> Patches</h2>
-    <p>Sampled vs. reference Rec.709 values. Click a reference swatch to override its value
-       if your chart's printed values differ.</p>
+  <section class="card" id="step-sample" hidden>
+    <header class="card-head">
+      <span class="num">3</span>
+      <h2>Patches</h2>
+    </header>
+    <p class="muted">Sampled vs. reference Rec.709 values. Click any reference swatch to override its value if your specific chart prints with different numbers.</p>
     <div class="row">
-      <button id="resample-btn" type="button">Re-sample</button>
-      <button id="reset-refs-btn" type="button">Reset reference values</button>
+      <button class="ghost" id="resample-btn" type="button">Re-sample</button>
+      <button class="ghost" id="reset-refs-btn" type="button">Reset reference values</button>
     </div>
     <div id="patch-grid"></div>
   </section>
 
-  <section class="step" id="step-fit" hidden>
-    <h2><span class="num">4</span> Fit &amp; export</h2>
+  <section class="card" id="step-fit" hidden>
+    <header class="card-head">
+      <span class="num">4</span>
+      <h2>Fit &amp; export</h2>
+    </header>
+
+    <div class="subgroup">
+      <span class="subgroup-label">Output target</span>
+      <div class="segmented" role="tablist" id="target-segmented">
+        <button class="seg active" data-target="rec709" role="tab" aria-selected="true">
+          <strong>Rec.709</strong><span>neutral, technically accurate</span>
+        </button>
+        <button class="seg" data-target="rec709a" role="tab" aria-selected="false">
+          <strong>Rec.709(A)</strong><span>Sony-style — punchier, more saturated</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="row style-controls" id="style-controls" hidden>
+      <label>Contrast
+        <span class="inline-range">
+          <input type="range" id="style-contrast" min="0" max="8" step="0.1" value="4.5">
+          <span id="style-contrast-value">4.5</span>
+        </span>
+      </label>
+      <label>Saturation
+        <span class="inline-range">
+          <input type="range" id="style-sat" min="0.8" max="1.5" step="0.01" value="1.15">
+          <span id="style-sat-value">1.15</span>
+        </span>
+      </label>
+    </div>
+
     <div class="row">
       <label>Fit model
         <select id="fit-model">
@@ -84,26 +158,53 @@
         </select>
       </label>
       <label>Title
-        <input type="text" id="lut-title" value="SpyderCheckr_to_Rec709">
+        <input type="text" id="lut-title" value="SpyderBro_Rec709">
       </label>
     </div>
-    <div class="row">
-      <button id="generate-btn" type="button">Generate .cube</button>
-      <a id="download-link" hidden download>Download .cube</a>
+
+    <div class="row actions">
+      <button class="primary" id="generate-btn" type="button">
+        Generate LUT &amp; preview
+      </button>
+      <a id="download-link" class="ghost" hidden download>Re-download .cube</a>
+      <span id="busy-pill" class="pill" hidden>Working…</span>
     </div>
     <pre id="fit-stats"></pre>
   </section>
+
+  <section class="card" id="step-preview" hidden>
+    <header class="card-head">
+      <span class="num">5</span>
+      <h2>Preview</h2>
+      <span class="pill faded">drag the divider</span>
+    </header>
+    <p class="muted">Left side: original log screenshot. Right side: same frame with the LUT applied. Drag the divider to compare.</p>
+    <div class="frame" id="preview-wrap">
+      <canvas id="preview-before"></canvas>
+      <canvas id="preview-after"></canvas>
+      <div class="split-handle" id="split-handle" aria-hidden="true">
+        <span class="split-line"></span>
+        <span class="split-grip">⇋</span>
+      </div>
+      <div class="frame-label left">LOG</div>
+      <div class="frame-label right">REC.709</div>
+    </div>
+    <p class="hint" id="preview-hint"></p>
+  </section>
+
 </main>
 
 <footer>
-  <p>Everything runs locally in your browser. No upload, no server.</p>
+  <p>Spyder Bro runs entirely in your browser. Your screenshot never leaves your device.</p>
 </footer>
 
 <script src="js/references.js"></script>
 <script src="js/matrix.js"></script>
 <script src="js/fit.js"></script>
 <script src="js/sampling.js"></script>
+<script src="js/post.js"></script>
 <script src="js/lut.js"></script>
+<script src="js/preview.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
