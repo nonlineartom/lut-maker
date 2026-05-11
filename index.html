@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpyderCheckr → Rec.709 LUT Maker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>SpyderCheckr → Rec.709 LUT Maker</h1>
+  <p class="lede">
+    Drop in a screenshot of a Datacolor SpyderCheckr photographed in your
+    camera's log format, line up the chart, and generate a <code>.cube</code> LUT
+    that converts that log signal to Rec.709.
+  </p>
+</header>
+
+<main>
+  <section class="step" id="step-upload">
+    <h2><span class="num">1</span> Load screenshot</h2>
+    <p>Use a still from a clip in the camera's native log gamma. PNG keeps the values intact;
+       JPEG is fine for most workflows.</p>
+    <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/bmp,image/tiff">
+    <p class="hint" id="upload-hint"></p>
+  </section>
+
+  <section class="step" id="step-align" hidden>
+    <h2><span class="num">2</span> Align the chart</h2>
+    <p>Drag the four markers to the <strong>centers of the four corner patches</strong> of the
+       chart (in this order: top-left, top-right, bottom-right, bottom-left).
+       Inner patches are placed by bilinear interpolation, so the chart can be at any
+       angle or perspective.</p>
+
+    <div class="row">
+      <label>Chart layout
+        <select id="chart-layout">
+          <option value="landscape">SpyderCheckr 24 — landscape (6 cols × 4 rows)</option>
+          <option value="portrait">SpyderCheckr 24 — portrait (4 cols × 6 rows)</option>
+        </select>
+      </label>
+      <label>Sample inset
+        <input type="range" id="sample-inset" min="20" max="55" step="5" value="40">
+        <span id="sample-inset-value">40%</span>
+      </label>
+      <button id="reset-corners" type="button">Reset corners</button>
+    </div>
+
+    <div id="canvas-wrap">
+      <canvas id="image-canvas"></canvas>
+      <canvas id="overlay-canvas"></canvas>
+    </div>
+  </section>
+
+  <section class="step" id="step-sample" hidden>
+    <h2><span class="num">3</span> Patches</h2>
+    <p>Sampled vs. reference Rec.709 values. Click a reference swatch to override its value
+       if your chart's printed values differ.</p>
+    <div class="row">
+      <button id="resample-btn" type="button">Re-sample</button>
+      <button id="reset-refs-btn" type="button">Reset reference values</button>
+    </div>
+    <div id="patch-grid"></div>
+  </section>
+
+  <section class="step" id="step-fit" hidden>
+    <h2><span class="num">4</span> Fit &amp; export</h2>
+    <div class="row">
+      <label>Fit model
+        <select id="fit-model">
+          <option value="poly3" selected>Polynomial — degree 3 (recommended)</option>
+          <option value="poly2">Polynomial — degree 2</option>
+          <option value="tps">Thin-plate spline (regularized)</option>
+        </select>
+      </label>
+      <label>Regularization (λ)
+        <input type="number" id="lambda" value="0.001" min="0" step="0.001">
+      </label>
+      <label>LUT size
+        <select id="lut-size">
+          <option value="17">17³</option>
+          <option value="33" selected>33³</option>
+          <option value="65">65³</option>
+        </select>
+      </label>
+      <label>Title
+        <input type="text" id="lut-title" value="SpyderCheckr_to_Rec709">
+      </label>
+    </div>
+    <div class="row">
+      <button id="generate-btn" type="button">Generate .cube</button>
+      <a id="download-link" hidden download>Download .cube</a>
+    </div>
+    <pre id="fit-stats"></pre>
+  </section>
+</main>
+
+<footer>
+  <p>Everything runs locally in your browser. No upload, no server.</p>
+</footer>
+
+<script src="js/references.js"></script>
+<script src="js/matrix.js"></script>
+<script src="js/fit.js"></script>
+<script src="js/sampling.js"></script>
+<script src="js/lut.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
