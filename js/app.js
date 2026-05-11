@@ -45,6 +45,7 @@
   const patchGrid       = $("#patch-grid");
   const resampleBtn     = $("#resample-btn");
   const resetRefsBtn    = $("#reset-refs-btn");
+  const importRefsBtn   = $("#import-refs-btn");
   const modelSelect     = $("#fit-model");
   const lambdaInput     = $("#lambda");
   const sizeSelect      = $("#lut-size");
@@ -230,13 +231,12 @@
     draw();
     sampleAndRender();
   });
-  insetSlider.addEventListener("input", () => {
+  bindSliderNumberPair(insetSlider, insetValue, () => {
     state.insetPct = parseInt(insetSlider.value, 10) / 100;
-    insetValue.textContent = insetSlider.value + "%";
-    updateRangeFill(insetSlider);
     draw();
   });
   insetSlider.addEventListener("change", () => sampleAndRender());
+  insetValue.addEventListener("change", () => sampleAndRender());
   resetCornersBtn.addEventListener("click", () => {
     if (!state.image) return;
     state.corners = defaultCorners(
@@ -248,9 +248,44 @@
   resampleBtn.addEventListener("click", () => sampleAndRender());
   resetRefsBtn.addEventListener("click", () => {
     if (!state.layout) return;
+    // Re-pull the (possibly imported) defaults from SpyderRefs.
+    state.layout = SpyderRefs.getLayout(state.layoutName);
     state.refs = state.layout.patches.map(p => p.slice());
     renderPatchGrid();
   });
+  importRefsBtn.addEventListener("click", () => {
+    if (!state.layout) return;
+    const expected = state.layout.cols * state.layout.rows;
+    ImportDialog.open({
+      layoutName: state.layoutName,
+      label: state.layout.label,
+      expectedCount: expected,
+      onApply: parsed => {
+        // SpyderRefs already updated; reflect in app state.
+        state.layout = SpyderRefs.getLayout(state.layoutName);
+        state.refs = state.layout.patches.map(p => p.slice());
+        renderPatchGrid();
+      },
+    });
+  });
+
+  // ---- slider ↔ numeric-input sync helpers ----
+  function bindSliderNumberPair(rangeEl, numberEl, onChange) {
+    rangeEl.addEventListener("input", () => {
+      numberEl.value = rangeEl.value;
+      updateRangeFill(rangeEl);
+      onChange && onChange();
+    });
+    numberEl.addEventListener("input", () => {
+      const v = parseFloat(numberEl.value);
+      const min = parseFloat(rangeEl.min);
+      const max = parseFloat(rangeEl.max);
+      if (!isFinite(v)) return;
+      rangeEl.value = Math.max(min, Math.min(max, v));
+      updateRangeFill(rangeEl);
+      onChange && onChange();
+    });
+  }
 
   // Target segmented control
   targetSegmented.addEventListener("click", e => {
@@ -278,14 +313,10 @@
   function onStyleChange() {
     state.styleContrast   = parseFloat(styleContrast.value);
     state.styleSaturation = parseFloat(styleSat.value);
-    styleContrastVal.textContent = state.styleContrast.toFixed(1);
-    styleSatVal.textContent      = state.styleSaturation.toFixed(2);
-    updateRangeFill(styleContrast);
-    updateRangeFill(styleSat);
     if (state.fitBuffer) repaintPreview();
   }
-  styleContrast.addEventListener("input", onStyleChange);
-  styleSat.addEventListener("input", onStyleChange);
+  bindSliderNumberPair(styleContrast, styleContrastVal, onStyleChange);
+  bindSliderNumberPair(styleSat,      styleSatVal,      onStyleChange);
 
   generateBtn.addEventListener("click", () => generate().catch(err => {
     fitStats.textContent = "Generate failed: " + err.message;

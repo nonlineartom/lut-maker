@@ -1,85 +1,106 @@
-// Datacolor SpyderCheckr Photo (a.k.a. SpyderCheckr 48) reference values.
+// Datacolor SpyderCheckr Photo reference colour data.
 //
-// The physical card is a hinged folder with two 4-column × 6-row panels.
+// Source: visual reading of the Datacolor application's reference-swatch
+// display (the swatches the Datacolor app itself uses for chart alignment).
+// The app displays the chart rotated 180° from the physical card's
+// standard reading orientation, so the values below have been rotated
+// 180° to match the layout the user sees when sampling a photo of the
+// physical card (column 0 = white→black grayscale ramp, top-to-bottom).
 //
-//   - "Color" panel (right side when the folder is open flat):
-//       Column 0 is a 6-step grayscale ramp from white (top) to black
-//       (bottom). Columns 1–3 hold 18 saturated reference colours arranged
-//       in three groups: RGB primaries, secondaries, and additional hues.
-//       This is the side that corresponds to the older single-panel
-//       SpyderCheckr 24.
-//
-//   - "Creative" panel (left side when open flat):
-//       More pastel, skin-tone, and naturalistic colours intended for
-//       portrait and photographic grading.
-//
-// The user samples ONE panel at a time. The chart layout selector below
-// chooses which 24-patch set we use as the fitting target.
-//
-// sRGB / Rec.709 D65 8-bit values. Datacolor's exact reference numbers are
-// printed on the card insert and vary slightly between production runs;
-// these are best-effort approximations. Click any reference swatch in the
-// UI to override a patch with the exact value from your card.
-//
-// All grids are stored row-major, top-to-bottom, left-to-right, in 4×6
-// portrait orientation (matching how the card sits when the hinge runs
-// vertically through the middle of the open folder).
+// These are read by eye from a screenshot and are accurate to roughly
+// ±5 per channel at 8-bit. For colorimetrically precise work, use the
+// "Import reference values…" button to paste the exact values printed on
+// your card's insert sheet or pulled from Datacolor's CGATS spec file.
+// Import accepts both sRGB 0–255 and CIE Lab D50 triplets.
 
 (function (global) {
 
-  // Color panel (right side). Column 0 = white→black grayscale ramp.
-  const COLOR_PANEL_4x6 = [
+  // Color panel (right side of the open folder).
+  // 4 cols × 6 rows, row-major top-to-bottom, left-to-right.
+  // Column 0 is the grayscale ramp; cols 1–3 are 18 colour patches.
+  const COLOR_PANEL_SRGB = [
     // Row 0
-    [249, 242, 238], [  0, 127, 159], [222, 118,  32], [ 98, 187, 166],
+    [245, 245, 240], [ 55, 130, 175], [220, 130,  50], [170, 215, 200],
     // Row 1
-    [202, 198, 195], [192,  75, 145], [ 25,  55, 135], [133, 128, 177],
+    [215, 215, 215], [200, 105, 165], [ 75, 100, 175], [140, 135, 175],
     // Row 2
-    [161, 157, 154], [245, 205,   0], [195,  79,  95], [ 87, 108,  67],
+    [195, 195, 195], [220, 215,  80], [190, 130, 135], [100, 120,  90],
     // Row 3
-    [122, 118, 116], [186,  26,  51], [ 83,  58, 106], [ 72,  92, 168],
+    [150, 150, 150], [200,  65,  65], [ 95,  80, 130], [125, 150, 175],
     // Row 4
-    [ 80,  80,  78], [ 57, 146,  64], [157, 188,  64], [220, 178, 150],
+    [115, 115, 115], [100, 175,  95], [195, 200,  85], [225, 195, 175],
     // Row 5
-    [ 43,  41,  43], [ 58,  88, 159], [230, 162,  39], [140,  95,  60],
+    [ 60,  60,  60], [ 60,  80, 165], [200, 165,  65], [108,  75,  55],
   ];
 
-  // Creative panel (left side). More portrait/pastel set; best-effort
-  // visual estimates from the printed card — override per-patch in the UI
-  // if your card prints different reference values.
-  const CREATIVE_PANEL_4x6 = [
+  // Creative panel (left side of the open folder). Pastel / portrait /
+  // skin-tone set.
+  const CREATIVE_PANEL_SRGB = [
     // Row 0
-    [220, 130, 145], [175, 185, 195], [200, 180, 150], [235, 235, 230],
+    [220, 160, 150], [220, 215, 215], [225, 205, 180], [235, 230, 220],
     // Row 1
-    [230, 195,  75], [180, 205, 200], [195, 175, 130], [200, 200, 200],
+    [220, 195, 105], [215, 220, 210], [200, 180, 145], [225, 220, 200],
     // Row 2
-    [130, 185, 130], [170, 175, 180], [180, 140,  70], [170, 170, 175],
+    [170, 215, 165], [220, 220, 215], [200, 170, 110], [195, 195, 195],
     // Row 3
-    [100, 175, 200], [ 75,  50,  50], [110,  75,  45], [150, 150, 155],
+    [160, 195, 215], [ 98,  98, 100], [160, 125,  75], [150, 150, 150],
     // Row 4
-    [145, 175, 215], [ 50,  75,  65], [ 50,  40,  40], [110, 110, 120],
+    [175, 180, 215], [ 95, 110, 100], [118,  95,  70], [118, 118, 118],
     // Row 5
-    [195, 130, 195], [ 65,  50,  90], [ 35,  30,  30], [ 80,  80,  85],
+    [225, 185, 220], [ 88,  88, 105], [ 78,  78,  78], [ 65,  65,  65],
   ];
+
+  function clonePatches(arr) { return arr.map(p => p.slice()); }
 
   const LAYOUTS = {
     color: {
       cols: 4, rows: 6,
-      patches: COLOR_PANEL_4x6,
-      label: "Color panel (right side)",
-      // Default corner placement, in image-relative coordinates (0..1):
-      // bias to the right half of the frame.
+      label: "Color (right side)",
+      patches: clonePatches(COLOR_PANEL_SRGB),
       defaultRegion: [0.55, 0.10, 0.95, 0.92],
     },
     creative: {
       cols: 4, rows: 6,
-      patches: CREATIVE_PANEL_4x6,
-      label: "Creative panel (left side)",
+      label: "Creative (left side)",
+      patches: clonePatches(CREATIVE_PANEL_SRGB),
       defaultRegion: [0.05, 0.10, 0.45, 0.92],
     },
   };
 
-  function clonePatches(arr) {
-    return arr.map(p => p.slice());
+  // Parse a pasted block of reference values. Accepted formats:
+  //   - "L, a, b" per line (CIE Lab D50)       — when format = "lab50"
+  //   - "R, G, B" per line (sRGB 0–255 or 0–1) — when format = "srgb"
+  // Comma, whitespace, semicolon, or tab delimiters all work; blank lines
+  // and lines starting with # or // are skipped.
+  function parsePastedRefs(text, format, expectedCount) {
+    const lines = text
+      .split(/\r?\n/)
+      .map(s => s.trim())
+      .filter(s => s && !s.startsWith("#") && !s.startsWith("//"));
+    const parsed = lines.map(line => {
+      const nums = line.split(/[\s,;\t]+/).filter(Boolean).map(Number);
+      if (nums.length < 3 || nums.some(n => !isFinite(n))) {
+        throw new Error(`Could not parse line: "${line}"`);
+      }
+      return nums.slice(0, 3);
+    });
+    if (parsed.length !== expectedCount) {
+      throw new Error(`Expected ${expectedCount} patches but got ${parsed.length}.`);
+    }
+    if (format === "lab50") {
+      return {
+        labD50: parsed,
+        patches: parsed.map(([L, a, b]) => ColorSpace.labD50ToSrgb8(L, a, b)),
+      };
+    }
+    const looksFloat = parsed.every(p => p.every(v => v >= 0 && v <= 1.0001));
+    return {
+      labD50: null,
+      patches: parsed.map(p => p.map(v => {
+        const u = looksFloat ? v * 255 : v;
+        return Math.max(0, Math.min(255, Math.round(u)));
+      })),
+    };
   }
 
   global.SpyderRefs = {
@@ -87,12 +108,16 @@
     getLayout(name) {
       const l = LAYOUTS[name] || LAYOUTS.color;
       return {
-        cols: l.cols,
-        rows: l.rows,
+        cols: l.cols, rows: l.rows, label: l.label,
         patches: clonePatches(l.patches),
-        label: l.label,
         defaultRegion: l.defaultRegion.slice(),
       };
+    },
+    parsePastedRefs,
+    setLayoutPatches(name, parsed) {
+      const l = LAYOUTS[name];
+      if (!l) return;
+      l.patches = parsed.patches.map(p => p.slice());
     },
   };
 })(window);
